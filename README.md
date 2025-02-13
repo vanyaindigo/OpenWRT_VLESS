@@ -1,4 +1,4 @@
-### Script Description for GitHub
+### Script Description
 
 This script automates the configuration of OpenWrt routers to enable advanced routing, DNS resolution, and traffic management. It is designed to support selective routing (split tunneling) for specific domains or services while ensuring secure and efficient network operation. Below is a detailed description of what the script does:
 
