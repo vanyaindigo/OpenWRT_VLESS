@@ -329,17 +329,6 @@ add_dns_interception() {
     fi
 }
 
-# Проверка версии OpenWrt
-MODEL=$(cat /tmp/sysinfo/model)
-source /etc/os-release
-printf "\033[34;1mModel: $MODEL\033[0m\n"
-printf "\033[34;1mVersion: $OPENWRT_RELEASE\033[0m\n"
-
-if [ "$VERSION_ID" != "24.10" ]; then
-    printf "\033[31;1mScript only supports OpenWrt 24.10\033[0m\n"
-    exit 1
-fi
-
 printf "\033[31;1mAll actions performed here cannot be rolled back automatically.\033[0m\n"
 
 # Выполнение функций
