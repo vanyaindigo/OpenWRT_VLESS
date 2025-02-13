@@ -227,16 +227,16 @@ add_dns_resolver() {
 
 # Создание скрипта для обновления доменов
 add_getdomains() {
-    # Установка DIG
-    if opkg list-installed | grep -q ldns; then
-        echo "ldns already installed"
+    # Установка drill
+    if opkg list-installed | grep -q drill; then
+        echo "drill already installed"
     else
         AVAILABLE_SPACE=$(df / | awk 'NR>1 { print $4 }')
-        if [[ "$AVAILABLE_SPACE" -gt 2000 ]]; then
-            echo "Installed ldns"
-            opkg install ldns
+        if [[ "$AVAILABLE_SPACE" -gt 200 ]]; then
+            echo "Installed drill"
+            opkg install drill
         else
-            printf "\033[31;1mNo free space for a dig. DIG is not installed.\033[0m\n"
+            printf "\033[31;1mNo free space for a drill. Drill is not installed.\033[0m\n"
             exit 1
         fi
     fi
