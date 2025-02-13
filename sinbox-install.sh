@@ -9,15 +9,12 @@ check_repo() {
 # Настройка маршрутизации для Sing-Box
 add_routing_tables() {
     printf "\033[32;1mConfigure routing tables\033[0m\n"
-    # Добавляем таблицы в /etc/iproute2/rt_tables
     grep -q "98 ru_table" /etc/iproute2/rt_tables || echo '98 ru_table' >> /etc/iproute2/rt_tables
     grep -q "99 vpn_table" /etc/iproute2/rt_tables || echo '99 vpn_table' >> /etc/iproute2/rt_tables
 
-    # Настройка правил маршрутизации
     ip rule add fwmark 0x1 lookup ru_table 2>/dev/null || true
     ip rule add fwmark 0x2 lookup vpn_table 2>/dev/null || true
 
-    # Настройка маршрутов для таблиц
     ip route add default dev wan table ru_table 2>/dev/null || true
     ip route add default dev tun0 table vpn_table 2>/dev/null || true
 }
@@ -304,6 +301,16 @@ EOF
     printf "\033[32;1mStart script\033[0m\n"
     /etc/init.d/getdomains start
 }
+# Проверка версии OpenWrt
+MODEL=$(cat /tmp/sysinfo/model)
+source /etc/os-release
+printf "\033[34;1mModel: $MODEL\033[0m\n"
+printf "\033[34;1mVersion: $OPENWRT_RELEASE\033[0m\n"
+
+if [ "$VERSION_ID" != "24.10" ]; then
+    printf "\033[31;1mScript only supports OpenWrt 24.10\033[0m\n"
+    exit 1
+fi
 
 printf "\033[31;1mAll actions performed here cannot be rolled back automatically.\033[0m\n"
 
