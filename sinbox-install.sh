@@ -242,7 +242,7 @@ add_getdomains() {
     fi
     # Создаем файл ru-доменами, потом его можно редактировать
     printf "\033[32;1mCreate conf file /etc/domains.conf\033[0m\n"
-    echo '"yandex.ru mail.ru vk.com mos.ru gosuslugi.ru ozon.ru gov.ru kremlin.ru mosenergosbyt.ru"' > /etc/domains.conf
+    echo "yandex.ru mail.ru vk.com mos.ru gosuslugi.ru ozon.ru gov.ru kremlin.ru mosenergosbyt.ru" > /etc/domains.conf
     printf "\033[32;1mCreate script /etc/init.d/getdomains\033[0m\n"
     cat << 'EOF' > /etc/init.d/getdomains
 #!/bin/sh /etc/rc.common
