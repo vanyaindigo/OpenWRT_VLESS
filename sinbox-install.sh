@@ -26,7 +26,7 @@ add_routing_tables() {
 add_mark() {
     printf "\033[32;1mConfigure mark rules\033[0m\n"
     # Маркировка трафика для ru_domains
-    if ! uci show network | grep -q mark0x1; then
+    if ! uci show network | grep "mark='0x1'"; then
         uci add network rule
         uci set network.@rule[-1].name='mark_ru_domains'
         uci set network.@rule[-1].mark='0x1'
@@ -36,7 +36,7 @@ add_mark() {
     fi
 
     # Маркировка трафика для остального трафика
-    if ! uci show network | grep -q mark0x2; then
+    if ! uci show network | grep "mark='0x2'"; then
         uci add network rule
         uci set network.@rule[-1].name='mark_other_traffic'
         uci set network.@rule[-1].mark='0x2'
@@ -97,7 +97,7 @@ configure_singbox() {
         echo "Sing-box already installed"
     else
         AVAILABLE_SPACE=$(df / | awk 'NR>1 { print $4 }')
-        if [[ "$AVAILABLE_SPACE" -gt 2000 ]]; then
+        if [ "$AVAILABLE_SPACE" -gt 2000 ]; then
             echo "Installed sing-box"
             opkg install sing-box
         else
@@ -189,7 +189,7 @@ dnsmasqfull() {
     else
         printf "\033[32;1mInstalled dnsmasq-full\033[0m\n"
         cd /tmp/ && opkg download dnsmasq-full
-        opkg remove dnsmasq && opkg install dnsmasq-full --cache /tmp/
+        opkg remove dnsmasq && opkg install ./dnsmasq-full*.ipk
         [ -f /etc/config/dhcp-opkg ] && cp /etc/config/dhcp /etc/config/dhcp-old && mv /etc/config/dhcp-opkg /etc/config/dhcp
     fi
 }
@@ -280,6 +280,7 @@ start () {
     # Проверяем синтаксис конфигурации dnsmasq
     if dnsmasq --conf-file="$TMP_FILE" --test 2>&1 | grep -q "syntax check OK"; then
         mv "$TMP_FILE" /tmp/dnsmasq.d/ru_domains.lst
+        uci set dhcp.@dnsmasq[0].confdir='/tmp/dnsmasq.d'
         /etc/init.d/dnsmasq restart
     else
         echo "Error: Invalid dnsmasq configuration. Check the domains list." >&2
@@ -303,18 +304,6 @@ EOF
     printf "\033[32;1mStart script\033[0m\n"
     /etc/init.d/getdomains start
 }
-
-# Системные детали
-MODEL=$(cat /tmp/sysinfo/model)
-source /etc/os-release
-printf "\033[34;1mModel: $MODEL\033[0m\n"
-printf "\033[34;1mVersion: $OPENWRT_RELEASE\033[0m\n"
-
-# Проверка версии OpenWrt
-if [ "$VERSION_ID" -ne 24 ]; then
-    printf "\033[31;1mScript only supports OpenWrt 24.10\033[0m\n"
-    exit 1
-fi
 
 printf "\033[31;1mAll actions performed here cannot be rolled back automatically.\033[0m\n"
 
