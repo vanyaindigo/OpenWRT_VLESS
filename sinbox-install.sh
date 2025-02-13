@@ -232,7 +232,7 @@ add_getdomains() {
         echo "drill already installed"
     else
         AVAILABLE_SPACE=$(df / | awk 'NR>1 { print $4 }')
-        if [[ "$AVAILABLE_SPACE" -gt 200 ]]; then
+        if [ "$AVAILABLE_SPACE" -gt 200 ]; then
             echo "Installed drill"
             opkg install drill
         else
