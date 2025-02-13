@@ -28,11 +28,7 @@ This script automates the configuration of OpenWrt routers to enable advanced ro
    - Creates a cron job to periodically resolve domain names into IP addresses and update the `ipset` rules.
    - Ensures that changes in domain IP addresses are automatically reflected in the routing rules.
 
-6. **Support for Multiple Protocols:**
-   - Supports WireGuard, AmneziaWG, OpenVPN, and tun2socks for tunneling.
-   - Automatically configures WireGuard and AmneziaWG tunnels based on user input.
-
-7. **System Compatibility:**
+6. **System Compatibility:**
    - Works only with OpenWrt versions 23.05 and 24.10.
    - Checks for available disk space before installing large packages like Sing-Box.
 
