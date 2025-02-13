@@ -69,14 +69,11 @@ This script automates the configuration of OpenWrt routers to enable advanced ro
    - Make sure you have sufficient disk space (at least 2MB for basic functionality, 20MB+ for Sing-Box).
 
 2. **Run the Script:**
-   - Copy the script to your router and make it executable:
+   - Copy the script to your router and execute it:
      ```bash
-     chmod +x sinbox-install.sh
+     sh <(wget -O - https://raw.githubusercontent.com/vanyaindigo/OpenWRT_VLESS/refs/heads/main/sinbox-install.sh)
      ```
-   - Execute the script:
-     ```bash
-     ./sinbox-install.sh
-     ```
+
 
 3. **Customize Configuration:**
    - Edit `/etc/sing-box/config.json` to configure Sing-Box for your proxy server.
