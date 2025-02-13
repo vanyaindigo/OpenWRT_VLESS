@@ -245,24 +245,25 @@ add_getdomains() {
     echo "yandex.ru mail.ru vk.com mos.ru gosuslugi.ru ozon.ru gov.ru kremlin.ru mosenergosbyt.ru" > /etc/domains.conf
     printf "\033[32;1mCreate script /etc/init.d/getdomains\033[0m\n"
     cat << 'EOF' > /etc/init.d/getdomains
-#!/bin/sh /etc/rc.common
-START=99
-start () {
-    DOMAINS=$(cat /etc/domains.conf)
+	#!/bin/sh /etc/rc.common
+	START=99
+	start () {
+    # Читаем домены из файла
+    DOMAINS=$(cat /etc/domains.conf | tr -s '[:space:]' ' ' | sed 's/^ *//;s/ *$//')
     TMP_FILE="/tmp/dnsmasq.d/ru_domains.lst"
     > "$TMP_FILE"
 
     for DOMAIN in $DOMAINS; do
-    echo "Processing domain: $DOMAIN"
-    # Разрешаем основной домен
-    IP_ADDRESSES=$(drill +short "$DOMAIN" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
-    if [ -n "$IP_ADDRESSES" ]; then
-        for IP in $IP_ADDRESSES; do
-            echo "ipset=/#$DOMAIN/$IP" >> "$TMP_FILE"
-        done
-    else
-        echo "Failed to resolve domain: $DOMAIN" >&2
-    fi
+        echo "Processing domain: $DOMAIN"
+        # Разрешаем основной домен
+        IP_ADDRESSES=$(drill +short "$DOMAIN" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
+        if [ -n "$IP_ADDRESSES" ]; then
+            for IP in $IP_ADDRESSES; do
+                echo "ipset=/#$DOMAIN/$IP" >> "$TMP_FILE"
+            done
+        else
+            echo "Failed to resolve domain: $DOMAIN" >&2
+        fi
 
         # Разрешаем поддомены через wildcard
         SUBDOMAINS=$(drill +short "*.$DOMAIN" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
@@ -278,7 +279,6 @@ start () {
     # Проверяем синтаксис конфигурации dnsmasq
     if dnsmasq --conf-file="$TMP_FILE" --test 2>&1 | grep -q "syntax check OK"; then
         mv "$TMP_FILE" /tmp/dnsmasq.d/ru_domains.lst
-        uci set dhcp.@dnsmasq[0].confdir='/tmp/dnsmasq.d'
         /etc/init.d/dnsmasq restart
     else
         echo "Error: Invalid dnsmasq configuration. Check the domains list." >&2
@@ -286,17 +286,12 @@ start () {
     fi
 }
 EOF
-
     chmod +x /etc/init.d/getdomains
     /etc/init.d/getdomains enable
 
-    # Добавляем задачу в cron для автоматического обновления каждые 8 часов
-    if crontab -l | grep -q /etc/init.d/getdomains; then
-        printf "\033[32;1mCrontab already configured\033[0m\n"
-    else
+    # Добавляем задачу в cron
+    if ! crontab -l | grep -q /etc/init.d/getdomains; then
         crontab -l | { cat; echo "0 */8	/etc/init.d/getdomains start"; } | crontab -
-        printf "\033[32;1mIgnore this error. This is normal for a new installation\033[0m\n"
-        /etc/init.d/cron restart
     fi
 
     printf "\033[32;1mStart script\033[0m\n"
