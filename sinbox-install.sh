@@ -301,6 +301,34 @@ EOF
     printf "\033[32;1mStart script\033[0m\n"
     /etc/init.d/getdomains start
 }
+
+# Перехватываем весь DNS-трафик
+add_dns_interception() {
+    printf "\033[32;1mConfigure DNS interception via firewall\033[0m\n"
+
+    # Проверяем, существует ли уже правило для перехвата DNS
+    if uci show firewall | grep -q "@redirect.*name='dns_redirect'"; then
+        printf "\033[32;1mDNS interception rule already exists\033[0m\n"
+    else
+        printf "\033[32;1mCreating DNS interception rule\033[0m\n"
+
+        # Добавляем правило перенаправления DNS
+        uci add firewall redirect
+        uci set firewall.@redirect[-1].name='dns_redirect'
+        uci set firewall.@redirect[-1].src='lan'
+        uci set firewall.@redirect[-1].proto='udp'
+        uci set firewall.@redirect[-1].src_dport='53'
+        uci set firewall.@redirect[-1].dest_port='53'
+        uci set firewall.@redirect[-1].target='DNAT'
+        uci set firewall.@redirect[-1].family='ipv4'
+
+        # Сохраняем изменения
+        uci commit firewall
+
+        printf "\033[32;1mDNS interception rule added successfully\033[0m\n"
+    fi
+}
+
 # Проверка версии OpenWrt
 MODEL=$(cat /tmp/sysinfo/model)
 source /etc/os-release
@@ -325,6 +353,7 @@ add_routing_tables
 add_dns_resolver
 add_getdomains
 add_internal_domains
+add_dns_interception
 
 # Перезапуск служб
 printf "\033[32;1mRestart network\033[0m\n"
