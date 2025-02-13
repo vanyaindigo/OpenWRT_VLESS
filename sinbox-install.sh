@@ -242,7 +242,7 @@ add_getdomains() {
     fi
     # Создаем файл ru-доменами, потом его можно редактировать
     printf "\033[32;1mCreate conf file /etc/domains.conf\033[0m\n"
-    echo "DOMAINS=yandex.ru mail.ru vk.com mos.ru gosuslugi.ru ozon.ru gov.ru kremlin.ru mosenergosbyt.ru" > /etc/domains.conf
+    echo "yandex.ru mail.ru vk.com mos.ru gosuslugi.ru ozon.ru gov.ru kremlin.ru mosenergosbyt.ru" > /etc/domains.conf
     printf "\033[32;1mCreate script /etc/init.d/getdomains\033[0m\n"
     cat << 'EOF' > /etc/init.d/getdomains
 #!/bin/sh /etc/rc.common
@@ -253,15 +253,16 @@ start () {
     > "$TMP_FILE"
 
     for DOMAIN in $DOMAINS; do
-        # Разрешаем основной домен
-        IP_ADDRESSES=$(nslookup "$DOMAIN" | awk '/^Address: / { print $2 }')
-        if [ -n "$IP_ADDRESSES" ]; then
-            for IP in $IP_ADDRESSES; do
-                echo "ipset=/#$DOMAIN/$IP" >> "$TMP_FILE"
-            done
-        else
-            echo "Failed to resolve domain: $DOMAIN" >&2
-        fi
+    echo "Processing domain: $DOMAIN"
+    # Разрешаем основной домен
+    IP_ADDRESSES=$(drill +short "$DOMAIN" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
+    if [ -n "$IP_ADDRESSES" ]; then
+        for IP in $IP_ADDRESSES; do
+            echo "ipset=/#$DOMAIN/$IP" >> "$TMP_FILE"
+        done
+    else
+        echo "Failed to resolve domain: $DOMAIN" >&2
+    fi
 
         # Разрешаем поддомены через wildcard
         SUBDOMAINS=$(drill +short "*.$DOMAIN" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
