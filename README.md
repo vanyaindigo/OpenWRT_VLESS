@@ -71,11 +71,11 @@ This script automates the configuration of OpenWrt routers to enable advanced ro
 2. **Run the Script:**
    - Copy the script to your router and make it executable:
      ```bash
-     chmod +x script_name.sh
+     chmod +x sinbox-install.sh
      ```
    - Execute the script:
      ```bash
-     ./script_name.sh
+     ./sinbox-install.sh
      ```
 
 3. **Customize Configuration:**
@@ -95,7 +95,7 @@ This script automates the configuration of OpenWrt routers to enable advanced ro
 
 ### **Limitations**
 - The script assumes basic familiarity with OpenWrt and command-line operations.
-- Some features (e.g., WireGuard, AmneziaWG) require manual configuration of keys and endpoints.
+- Some features (e.g., Sing-Box configuration) require manual configuration of keys and endpoints.
 - Disk space constraints may prevent the installation of certain packages (e.g., Sing-Box).
 
 ---
@@ -106,14 +106,9 @@ If you encounter issues or have suggestions for improvement, feel free to open a
 ---
 
 ### **License**
-This script is released under the MIT License. See the `LICENSE` file for details.
-
+This script is released under the MIT License.
 ---
 
 ### **Acknowledgments**
 - Thanks to the OpenWrt community for providing robust tools and documentation.
 - Special thanks to contributors of `dnsmasq`, `Stubby`, and `Sing-Box` for their excellent software.
-
----
-
-By following this script, you can achieve a highly customizable and secure network setup on your OpenWrt router. Enjoy! 🚀
