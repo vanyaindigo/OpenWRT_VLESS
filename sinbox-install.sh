@@ -228,13 +228,13 @@ add_dns_resolver() {
 # Создание скрипта для обновления доменов
 add_getdomains() {
     # Установка DIG
-    if opkg list-installed | grep -q dig; then
-        echo "dig already installed"
+    if opkg list-installed | grep -q ldns; then
+        echo "ldns already installed"
     else
         AVAILABLE_SPACE=$(df / | awk 'NR>1 { print $4 }')
         if [[ "$AVAILABLE_SPACE" -gt 2000 ]]; then
-            echo "Installed dig"
-            opkg install dig
+            echo "Installed ldns"
+            opkg install ldns
         else
             printf "\033[31;1mNo free space for a dig. DIG is not installed.\033[0m\n"
             exit 1
@@ -264,7 +264,7 @@ start () {
         fi
 
         # Разрешаем поддомены через wildcard
-        SUBDOMAINS=$(dig +short "*.$DOMAIN" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
+        SUBDOMAINS=$(drill +short "*.$DOMAIN" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
         if [ -n "$SUBDOMAINS" ]; then
             for SUB_IP in $SUBDOMAINS; do
                 echo "ipset=/#*.$DOMAIN/$SUB_IP" >> "$TMP_FILE"
