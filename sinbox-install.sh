@@ -230,20 +230,33 @@ add_dns_resolver() {
 
 # Создание скрипта для обновления доменов
 add_getdomains() {
+    # Установка DIG
+    if opkg list-installed | grep -q dig; then
+        echo "dig already installed"
+    else
+        AVAILABLE_SPACE=$(df / | awk 'NR>1 { print $4 }')
+        if [[ "$AVAILABLE_SPACE" -gt 2000 ]]; then
+            echo "Installed dig"
+            opkg install dig
+        else
+            printf "\033[31;1mNo free space for a dig. DIG is not installed.\033[0m\n"
+            exit 1
+        fi
+    fi
+    # Создаем файл ru-доменами, потом его можно редактировать
+    printf "\033[32;1mCreate conf file /etc/domains.conf\033[0m\n"
+    echo "DOMAINS=yandex.ru mail.ru vk.com mos.ru gosuslugi.ru ozon.ru gov.ru kremlin.ru mosenergosbyt.ru" > /etc/domains.conf
     printf "\033[32;1mCreate script /etc/init.d/getdomains\033[0m\n"
     cat << 'EOF' > /etc/init.d/getdomains
 #!/bin/sh /etc/rc.common
 START=99
 start () {
-    DOMAINS="yandex.ru mail.ru vk.com"
-    TMP_FILE="/tmp/dnsmasq.d/ru_domains.lst.tmp"
-    FINAL_FILE="/tmp/dnsmasq.d/ru_domains.lst"
-
-    # Создаем временный файл для хранения IP-адресов
+    DOMAINS=$(cat /etc/domains.conf)
+    TMP_FILE="/tmp/dnsmasq.d/ru_domains.lst"
     > "$TMP_FILE"
 
-    # Разрешаем домены в IP-адреса и добавляем их во временный файл
     for DOMAIN in $DOMAINS; do
+        # Разрешаем основной домен
         IP_ADDRESSES=$(nslookup "$DOMAIN" | awk '/^Address: / { print $2 }')
         if [ -n "$IP_ADDRESSES" ]; then
             for IP in $IP_ADDRESSES; do
@@ -252,24 +265,21 @@ start () {
         else
             echo "Failed to resolve domain: $DOMAIN" >&2
         fi
+
+        # Разрешаем поддомены через wildcard
+        SUBDOMAINS=$(dig +short "*.$DOMAIN" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
+        if [ -n "$SUBDOMAINS" ]; then
+            for SUB_IP in $SUBDOMAINS; do
+                echo "ipset=/#*.$DOMAIN/$SUB_IP" >> "$TMP_FILE"
+            done
+        else
+            echo "No subdomains found for: $DOMAIN" >&2
+        fi
     done
 
     # Проверяем синтаксис конфигурации dnsmasq
     if dnsmasq --conf-file="$TMP_FILE" --test 2>&1 | grep -q "syntax check OK"; then
-        # Сравниваем хэши текущего файла и нового файла
-        if [ -f "$FINAL_FILE" ]; then
-            CURRENT_HASH=$(md5sum "$FINAL_FILE" | awk '{print $1}')
-            NEW_HASH=$(md5sum "$TMP_FILE" | awk '{print $1}')
-            if [ "$CURRENT_HASH" = "$NEW_HASH" ]; then
-                echo "File has not changed. Skipping update."
-                rm -f "$TMP_FILE"
-                exit 0
-            fi
-        fi
-
-        # Перемещаем временный файл в финальное расположение
-        mv "$TMP_FILE" "$FINAL_FILE"
-        echo "File updated successfully."
+        mv "$TMP_FILE" /tmp/dnsmasq.d/ru_domains.lst
         /etc/init.d/dnsmasq restart
     else
         echo "Error: Invalid dnsmasq configuration. Check the domains list." >&2
