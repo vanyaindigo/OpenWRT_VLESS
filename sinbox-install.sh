@@ -15,7 +15,7 @@ add_routing_tables() {
     ip rule add fwmark 0x1 lookup ru_table 2>/dev/null || true
     ip rule add fwmark 0x2 lookup vpn_table 2>/dev/null || true
 
-    ip route add default dev wan table ru_table 2>/dev/null || true
+    ip route add default dev eth1 table ru_table 2>/dev/null || true
     ip route add default dev tun0 table vpn_table 2>/dev/null || true
 }
 
